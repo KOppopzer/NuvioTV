@@ -92,7 +92,9 @@ private class SubtitleLineSpacingSpan(
         fm: Paint.FontMetricsInt
     ) {
         val extra = ((fm.descent - fm.ascent) * (multiplier - 1f)).roundToInt()
-        fm.descent += extra
-        fm.bottom += extra
+        // Keep the bottom line anchored to the existing subtitle position. Extra
+        // height is added above each line so only the lines above it move.
+        fm.ascent -= extra
+        fm.top -= extra
     }
 }
