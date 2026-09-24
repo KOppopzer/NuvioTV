@@ -329,6 +329,7 @@ fun PlaybackSettingsContent(
                     coroutineScope.launch { viewModel.setParallelNetworkEnabled(enabled) }
                 },
                 onSetSubtitleSize = { newSize -> coroutineScope.launch { viewModel.setSubtitleSize(newSize) } },
+                onSetSubtitleLineSpacing = { spacing -> coroutineScope.launch { viewModel.setSubtitleLineSpacing(spacing) } },
                 onSetSubtitleVerticalOffset = { newOffset -> coroutineScope.launch { viewModel.setSubtitleVerticalOffset(newOffset) } },
                 onSetSubtitleBold = { bold -> coroutineScope.launch { viewModel.setSubtitleBold(bold) } },
                 onSetUseForcedSubtitles = { enabled -> coroutineScope.launch { viewModel.setUseForcedSubtitles(enabled) } },

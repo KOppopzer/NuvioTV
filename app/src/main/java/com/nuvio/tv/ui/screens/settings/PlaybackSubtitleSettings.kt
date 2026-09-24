@@ -74,6 +74,7 @@ internal fun LazyListScope.subtitleSettingsItems(
     onShowBackgroundColorDialog: () -> Unit,
     onShowOutlineColorDialog: () -> Unit,
     onSetSubtitleSize: (Int) -> Unit,
+    onSetSubtitleLineSpacing: (Int) -> Unit,
     onSetSubtitleVerticalOffset: (Int) -> Unit,
     onSetSubtitleBold: (Boolean) -> Unit,
     onSetUseForcedSubtitles: (Boolean) -> Unit,
@@ -168,6 +169,22 @@ internal fun LazyListScope.subtitleSettingsItems(
             maxValue = 200,
             step = 10,
             onValueChange = onSetSubtitleSize,
+            onFocused = onItemFocused,
+            enabled = enabled
+        )
+    }
+
+    item(key = "subtitle_line_spacing") {
+        SliderSettingsItem(
+            icon = Icons.Default.FormatSize,
+            title = stringResource(R.string.sub_line_spacing),
+            subtitle = stringResource(R.string.sub_line_spacing_desc),
+            value = playerSettings.subtitleStyle.lineSpacing,
+            valueText = "${playerSettings.subtitleStyle.lineSpacing}%",
+            minValue = 80,
+            maxValue = 200,
+            step = 10,
+            onValueChange = onSetSubtitleLineSpacing,
             onFocused = onItemFocused,
             enabled = enabled
         )

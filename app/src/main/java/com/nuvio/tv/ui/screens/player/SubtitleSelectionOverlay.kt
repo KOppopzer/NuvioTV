@@ -909,6 +909,24 @@ private fun SubtitleStyleRail(
             }
             item {
                 OverlaySectionCard(
+                    title = stringResource(R.string.subtitle_style_line_spacing),
+                    modifier = styleCardModifier
+                ) {
+                    StepperRow(
+                        value = "${subtitleStyle.lineSpacing}%",
+                        onDecrease = { dispatchStyleEvent(PlayerEvent.OnSetSubtitleLineSpacing(subtitleStyle.lineSpacing - 10)) },
+                        onIncrease = { dispatchStyleEvent(PlayerEvent.OnSetSubtitleLineSpacing(subtitleStyle.lineSpacing + 10)) },
+                        onMoveLeft = onMoveLeft,
+                        decrementFocusRequester = focusRequesters[StyleFocusKey.LineSpacingDecrease],
+                        incrementFocusRequester = focusRequesters[StyleFocusKey.LineSpacingIncrease],
+                        decrementFocusKey = StyleFocusKey.LineSpacingDecrease,
+                        incrementFocusKey = StyleFocusKey.LineSpacingIncrease,
+                        onFocusChanged = onStyleFocused
+                    )
+                }
+            }
+            item {
+                OverlaySectionCard(
                     title = stringResource(R.string.subtitle_style_bold),
                     modifier = styleCardModifier
                 ) {
@@ -1670,6 +1688,8 @@ private fun overlayCardBorder() = CardDefaults.border(
 private object StyleFocusKey {
     const val FontSizeDecrease = "font_size_decrease"
     const val FontSizeIncrease = "font_size_increase"
+    const val LineSpacingDecrease = "line_spacing_decrease"
+    const val LineSpacingIncrease = "line_spacing_increase"
     const val Bold = "bold"
     const val OutlineToggle = "outline_toggle"
     const val OffsetDecrease = "offset_decrease"
@@ -1692,12 +1712,13 @@ private fun styleListIndexForFocusKey(focusKey: String): Int {
     return when {
         focusKey == StyleFocusKey.DelaySet -> 0
         focusKey == StyleFocusKey.FontSizeDecrease || focusKey == StyleFocusKey.FontSizeIncrease -> 1
-        focusKey == StyleFocusKey.Bold -> 2
-        focusKey.startsWith("${StyleFocusKey.TextColorPrefix}:") -> 3
-        focusKey == StyleFocusKey.OpacityDecrease || focusKey == StyleFocusKey.OpacityIncrease -> 4
-        focusKey == StyleFocusKey.OutlineToggle || focusKey.startsWith("${StyleFocusKey.OutlineColorPrefix}:") -> 5
-        focusKey == StyleFocusKey.OffsetDecrease || focusKey == StyleFocusKey.OffsetIncrease -> 6
-        focusKey == StyleFocusKey.Reset -> 7
+        focusKey == StyleFocusKey.LineSpacingDecrease || focusKey == StyleFocusKey.LineSpacingIncrease -> 2
+        focusKey == StyleFocusKey.Bold -> 3
+        focusKey.startsWith("${StyleFocusKey.TextColorPrefix}:") -> 4
+        focusKey == StyleFocusKey.OpacityDecrease || focusKey == StyleFocusKey.OpacityIncrease -> 5
+        focusKey == StyleFocusKey.OutlineToggle || focusKey.startsWith("${StyleFocusKey.OutlineColorPrefix}:") -> 6
+        focusKey == StyleFocusKey.OffsetDecrease || focusKey == StyleFocusKey.OffsetIncrease -> 7
+        focusKey == StyleFocusKey.Reset -> 8
         else -> 0
     }
 }
@@ -1713,6 +1734,8 @@ private fun rememberStyleFocusRequesters(): Map<String, FocusRequester> {
         listOf(
             StyleFocusKey.FontSizeDecrease,
             StyleFocusKey.FontSizeIncrease,
+            StyleFocusKey.LineSpacingDecrease,
+            StyleFocusKey.LineSpacingIncrease,
             StyleFocusKey.Bold,
             StyleFocusKey.OpacityDecrease,
             StyleFocusKey.OpacityIncrease,

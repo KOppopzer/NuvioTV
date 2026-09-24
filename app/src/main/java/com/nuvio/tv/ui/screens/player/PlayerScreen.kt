@@ -1939,6 +1939,7 @@ private fun PlayerView.applySubtitleStyleIfNeeded(
         val baseFontSize = 24f
         val scaledFontSize = baseFontSize * (subtitleStyle.size / 100f)
         setFixedTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, scaledFontSize)
+        subView.setLineSpacingMultiplier(subtitleStyle.lineSpacing / 100f)
         setApplyEmbeddedFontSizes(false)
 
         val typeface = if (subtitleStyle.bold) {
