@@ -4,7 +4,6 @@ import android.graphics.Paint
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.LineHeightSpan
-import android.util.DisplayMetrics
 import android.util.Log
 import androidx.media3.common.text.Cue
 import androidx.media3.ui.SubtitleView
@@ -83,15 +82,14 @@ private fun transformCues(cues: List<*>?, multiplier: Float): List<Cue> {
 
 private class SubtitleLineSpacingSpan(
     private val multiplier: Float
-) : LineHeightSpan.WithDensity {
+) : LineHeightSpan {
     override fun chooseHeight(
         text: CharSequence,
         start: Int,
         end: Int,
         spanstartv: Int,
         v: Int,
-        fm: Paint.FontMetricsInt,
-        density: DisplayMetrics
+        fm: Paint.FontMetricsInt
     ) {
         val extra = ((fm.descent - fm.ascent) * (multiplier - 1f)).roundToInt()
         fm.descent += extra
