@@ -145,6 +145,7 @@ data class SubtitleStyleSettings(
     val showOnlyPreferredLanguages: Boolean = false,
     val stripSdh: Boolean = true,
     val size: Int = 120, // Percentage (50-200)
+    val lineSpacing: Int = 100, // Percentage of the default line height (80-200)
     val verticalOffset: Int = 5, // Percentage from bottom (-20 to 50)
     val bold: Boolean = false,
     val textColor: Int = Color.White.toArgb(),
@@ -577,6 +578,7 @@ class PlayerSettingsDataStore @Inject constructor(
     private val subtitleShowOnlyPreferredLanguagesKey = booleanPreferencesKey("subtitle_show_only_preferred_languages")
     private val subtitleStripSdhKey = booleanPreferencesKey("subtitle_strip_sdh")
     private val subtitleSizeKey = intPreferencesKey("subtitle_size")
+    private val subtitleLineSpacingKey = intPreferencesKey("subtitle_line_spacing")
     private val subtitleVerticalOffsetKey = intPreferencesKey("subtitle_vertical_offset")
     private val subtitleBoldKey = booleanPreferencesKey("subtitle_bold")
     private val subtitleTextColorKey = intPreferencesKey("subtitle_text_color")
@@ -1012,6 +1014,7 @@ class PlayerSettingsDataStore @Inject constructor(
                         showOnlyPreferredLanguages = prefs[subtitleShowOnlyPreferredLanguagesKey] ?: false,
                         stripSdh = prefs[subtitleStripSdhKey] ?: false,
                         size = prefs[subtitleSizeKey] ?: 100,
+                        lineSpacing = (prefs[subtitleLineSpacingKey] ?: 100).coerceIn(80, 200),
                         verticalOffset = prefs[subtitleVerticalOffsetKey] ?: 5,
                         bold = prefs[subtitleBoldKey] ?: false,
                         textColor = prefs[subtitleTextColorKey] ?: Color.White.toArgb(),
@@ -1550,6 +1553,7 @@ class PlayerSettingsDataStore @Inject constructor(
         }
     }
     suspend fun setSubtitleSize(size: Int) { store().edit { it[subtitleSizeKey] = size.coerceIn(50, 200) } }
+    suspend fun setSubtitleLineSpacing(spacing: Int) { store().edit { it[subtitleLineSpacingKey] = spacing.coerceIn(80, 200) } }
     suspend fun setSubtitleVerticalOffset(offset: Int) { store().edit { it[subtitleVerticalOffsetKey] = offset.coerceIn(-20, 50) } }
     suspend fun setSubtitleBold(bold: Boolean) { store().edit { it[subtitleBoldKey] = bold } }
     suspend fun setSubtitleTextColor(color: Int) { store().edit { it[subtitleTextColorKey] = color } }
