@@ -197,7 +197,7 @@ internal fun PlayerRuntimeController.renderSidecarCuesAtCurrentPosition() {
     val currentKey = activeSidecarSubtitleKey ?: return
     postToSubtitleView { view ->
         if (view.getTag(R.id.player_view_sidecar_generation_tag) == currentKey) {
-            view.setCues(merged)
+            view.setCues(merged.withSubtitleLineSpacing(currentPlayerSettingsForReport.subtitleStyle.lineSpacing))
         }
     }
 }
