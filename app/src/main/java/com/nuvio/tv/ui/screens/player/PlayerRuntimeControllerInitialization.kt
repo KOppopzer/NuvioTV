@@ -900,7 +900,7 @@ internal fun PlayerRuntimeController.initializePlayer(
                 gainAudioProcessor = gainAudioProcessor,
                 downmixEnabled = effectiveDownmixEnabled,
                 audioOutputChannels = effectiveAudioOutputChannels,
-                downmixNormalizationEnabled = !playerSettings.maintainOriginalAudioOnDownmix,
+                downmixNormalizationEnabled = playerSettings.postDownmixLimiterEnabled,
                 forceOpticalPassthrough = isForcePassthroughActive,
                 bluetoothForcePcm = isBluetoothAudioOutput,
                 playbackSpeedProvider = { _uiState.value.playbackSpeed },
@@ -912,7 +912,7 @@ internal fun PlayerRuntimeController.initializePlayer(
                     renderer?.applyDownmixSettings(
                         downmixEnabled = effectiveDownmixEnabled,
                         audioOutputChannels = effectiveAudioOutputChannels,
-                        downmixNormalizationEnabled = !playerSettings.maintainOriginalAudioOnDownmix,
+                        downmixNormalizationEnabled = playerSettings.postDownmixLimiterEnabled,
                         forceOpticalPassthrough = isForcePassthroughActive
                     )
                     applyCenterMixLevel(_uiState.value.centerMixLevelDb)
