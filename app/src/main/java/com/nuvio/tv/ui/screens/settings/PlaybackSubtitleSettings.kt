@@ -104,6 +104,17 @@ internal fun PlaybackSubtitlesSection(
         enabled = enabled
     )
     SliderSettingsItem(
+        title = stringResource(R.string.sub_line_spacing),
+        subtitle = stringResource(R.string.sub_line_spacing_desc),
+        value = style.lineSpacing,
+        valueText = "${style.lineSpacing}%",
+        minValue = 80,
+        maxValue = 200,
+        step = 10,
+        onValueChange = { spacing -> onUpdate { setSubtitleLineSpacing(spacing) } },
+        enabled = enabled
+    )
+    SliderSettingsItem(
         title = stringResource(R.string.sub_vertical_offset),
         value = style.verticalOffset,
         valueText = "${style.verticalOffset}%",
