@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ClosedCaption
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.FormatBold
+import androidx.compose.material.icons.filled.FormatLineSpacing
 import androidx.compose.material.icons.filled.FormatSize
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Palette
@@ -74,6 +75,7 @@ internal fun LazyListScope.subtitleSettingsItems(
     onShowBackgroundColorDialog: () -> Unit,
     onShowOutlineColorDialog: () -> Unit,
     onSetSubtitleSize: (Int) -> Unit,
+    onSetSubtitleLineSpacing: (Int) -> Unit,
     onSetSubtitleVerticalOffset: (Int) -> Unit,
     onSetSubtitleBold: (Boolean) -> Unit,
     onSetUseForcedSubtitles: (Boolean) -> Unit,
@@ -183,6 +185,22 @@ internal fun LazyListScope.subtitleSettingsItems(
             maxValue = 50,
             step = 1,
             onValueChange = onSetSubtitleVerticalOffset,
+            onFocused = onItemFocused,
+            enabled = enabled
+        )
+    }
+
+    item(key = "subtitle_line_spacing") {
+        SliderSettingsItem(
+            icon = Icons.Default.FormatLineSpacing,
+            title = stringResource(R.string.sub_line_spacing),
+            subtitle = stringResource(R.string.sub_line_spacing_desc),
+            value = playerSettings.subtitleStyle.lineSpacing,
+            valueText = "${playerSettings.subtitleStyle.lineSpacing}%",
+            minValue = 80,
+            maxValue = 200,
+            step = 10,
+            onValueChange = onSetSubtitleLineSpacing,
             onFocused = onItemFocused,
             enabled = enabled
         )
