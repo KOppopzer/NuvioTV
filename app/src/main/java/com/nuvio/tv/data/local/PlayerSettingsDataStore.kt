@@ -226,7 +226,8 @@ data class PlayerSettings(
     val decoderPriority: Int = 1, // EXTENSION_RENDERER_MODE_ON (0=off, 1=on, 2=prefer)
     val downmixEnabled: Boolean = false,
     val audioOutputChannels: AudioOutputChannels = AudioOutputChannels.default,
-    val maintainOriginalAudioOnDownmix: Boolean = true,
+    val postDownmixLimiterEnabled: Boolean = true,
+    val maintainOriginalAudioOnDownmix: Boolean = !postDownmixLimiterEnabled,
     val tunnelingEnabled: Boolean = false,
     val forceOpticalPassthrough: Boolean = false,
     val skipSilence: Boolean = false,
@@ -488,6 +489,7 @@ class PlayerSettingsDataStore @Inject constructor(
     private val decoderPriorityKey = intPreferencesKey("decoder_priority")
     private val downmixEnabledKey = booleanPreferencesKey("downmix_enabled")
     private val audioOutputChannelsKey = stringPreferencesKey("audio_output_channels")
+    private val postDownmixLimiterEnabledKey = booleanPreferencesKey("post_downmix_limiter_enabled")
     private val maintainOriginalAudioOnDownmixKey =
         booleanPreferencesKey("maintain_original_audio_on_downmix")
     private val downmixNormalizationEnabledLegacyKey =
@@ -858,14 +860,29 @@ class PlayerSettingsDataStore @Inject constructor(
                         ?: (
                             prefs[audioOutputChannelsKey] != null ||
                                 prefs[maintainOriginalAudioOnDownmixKey] != null ||
+                                prefs[postDownmixLimiterEnabledKey] != null ||
                                 prefs[downmixNormalizationEnabledLegacyKey] != null
                             ),
                 audioOutputChannels = AudioOutputChannels.fromSettingValue(
                     prefs[audioOutputChannelsKey]
                 ),
-                maintainOriginalAudioOnDownmix =
-                    prefs[maintainOriginalAudioOnDownmixKey]
-                        ?: !(prefs[downmixNormalizationEnabledLegacyKey] ?: false),
+                postDownmixLimiterEnabled = prefs[postDownmixLimiterEnabledKey]
+                    ?: (
+                        if (prefs[maintainOriginalAudioOnDownmixKey] != null) {
+                            !prefs[maintainOriginalAudioOnDownmixKey]!!
+                        } else {
+                            prefs[downmixNormalizationEnabledLegacyKey] ?: true
+                        }
+                    ),
+                maintainOriginalAudioOnDownmix = prefs[maintainOriginalAudioOnDownmixKey]
+                    ?: !((prefs[postDownmixLimiterEnabledKey]
+                        ?: (
+                            if (prefs[maintainOriginalAudioOnDownmixKey] != null) {
+                                !prefs[maintainOriginalAudioOnDownmixKey]!!
+                            } else {
+                                prefs[downmixNormalizationEnabledLegacyKey] ?: true
+                            }
+                        ))),
                 tunnelingEnabled = prefs[tunnelingEnabledKey] ?: false,
                 forceOpticalPassthrough = prefs[forceOpticalPassthroughKey] ?: false,
                 skipSilence = prefs[skipSilenceKey] ?: false,
@@ -1099,11 +1116,16 @@ class PlayerSettingsDataStore @Inject constructor(
         }
     }
 
-    suspend fun setMaintainOriginalAudioOnDownmix(enabled: Boolean) {
+    suspend fun setPostDownmixLimiterEnabled(enabled: Boolean) {
         store().edit { prefs ->
             prefs[downmixEnabledKey] = true
-            prefs[maintainOriginalAudioOnDownmixKey] = enabled
+            prefs[postDownmixLimiterEnabledKey] = enabled
+            prefs[maintainOriginalAudioOnDownmixKey] = !enabled
         }
+    }
+
+    suspend fun setMaintainOriginalAudioOnDownmix(enabled: Boolean) {
+        setPostDownmixLimiterEnabled(!enabled)
     }
 
     suspend fun setTunnelingEnabled(enabled: Boolean) {

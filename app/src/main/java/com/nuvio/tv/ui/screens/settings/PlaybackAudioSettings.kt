@@ -70,7 +70,7 @@ internal fun LazyListScope.trailerAndAudioSettingsItems(
     onShowMpvHardwareDecodeModeDialog: () -> Unit,
     onShowDv7HandlingModeDialog: () -> Unit,
     onSetDownmixEnabled: (Boolean) -> Unit,
-    onSetMaintainOriginalAudioOnDownmix: (Boolean) -> Unit,
+    onSetPostDownmixLimiterEnabled: (Boolean) -> Unit,
     onSetSkipSilence: (Boolean) -> Unit,
     onSetRememberAudioDelayPerDevice: (Boolean) -> Unit,
     onSetTunnelingEnabled: (Boolean) -> Unit,
@@ -236,13 +236,13 @@ internal fun LazyListScope.trailerAndAudioSettingsItems(
                 )
             }
 
-            item(key = "audio_downmix_normalization") {
+            item(key = "audio_post_downmix_limiter") {
                 ToggleSettingsItem(
                     icon = Icons.Default.Tune,
-                    title = stringResource(R.string.audio_maintain_original_audio_on_downmix_title),
-                    subtitle = stringResource(R.string.audio_maintain_original_audio_on_downmix_subtitle),
-                    isChecked = playerSettings.maintainOriginalAudioOnDownmix,
-                    onCheckedChange = onSetMaintainOriginalAudioOnDownmix,
+                    title = stringResource(R.string.audio_post_downmix_limiter_title),
+                    subtitle = stringResource(R.string.audio_post_downmix_limiter_subtitle),
+                    isChecked = playerSettings.postDownmixLimiterEnabled,
+                    onCheckedChange = onSetPostDownmixLimiterEnabled,
                     onFocused = onItemFocused,
                     enabled = enabled
                 )
