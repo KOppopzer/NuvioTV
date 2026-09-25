@@ -45,6 +45,7 @@ import com.nuvio.tv.domain.repository.StreamRepository
 import com.nuvio.tv.domain.repository.WatchProgressRepository
 import com.nuvio.tv.ui.components.SourceChipItem
 import com.nuvio.tv.ui.components.SourceChipStatus
+import com.nuvio.tv.ui.screens.player.sourceFilenameForPlayback
 import com.nuvio.tv.ui.screens.player.StreamSidecarSubtitles
 import com.nuvio.tv.ui.util.localizedGenreLabel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -1372,7 +1373,7 @@ class StreamScreenViewModel @Inject constructor(
             episodeTitle = episodeName,
             bingeGroup = stream.behaviorHints?.bingeGroup,
             profileId = playbackProfileId,
-            filename = stream.behaviorHints?.filename,
+            filename = sourceFilenameForPlayback(stream),
             videoHash = stream.behaviorHints?.videoHash,
             videoSize = stream.behaviorHints?.videoSize,
             addonName = stream.addonName,

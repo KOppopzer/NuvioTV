@@ -611,7 +611,11 @@ private fun PlayerRuntimeController.applySelectedStreamState(
     val playbackRequest = PlayerMediaSourceFactory.normalizePlaybackRequest(url, headers)
     currentStreamUrl = playbackRequest.url
     currentHeaders = playbackRequest.headers
-    currentFilename = stream.behaviorHints?.filename ?: navigationArgs.filename
+    currentFilename = sourceFilenameForPlayback(
+        stream = stream,
+        sourceUrl = url,
+        fallbackFilename = navigationArgs.filename
+    )
     currentStreamResponseHeaders = stream.behaviorHints?.proxyHeaders?.response.orEmpty()
     currentStreamMimeType = PlayerMediaSourceFactory.inferMimeType(
         url = playbackRequest.url,
@@ -698,7 +702,10 @@ private fun PlayerRuntimeController.persistTorrentStreamForReuse(stream: Stream)
             url = "",
             streamName = streamName,
             headers = emptyMap(),
-            filename = stream.behaviorHints?.filename,
+            filename = sourceFilenameForPlayback(
+                stream = stream,
+                fallbackFilename = navigationArgs.filename
+            ),
             videoHash = stream.behaviorHints?.videoHash,
             videoSize = stream.behaviorHints?.videoSize,
             infoHash = infoHash,
@@ -993,7 +1000,10 @@ private fun PlayerRuntimeController.switchToTorrentSourceStream(
         )
     }
     applyStreamMetadata(stream)
-    currentFilename = stream.behaviorHints?.filename ?: navigationArgs.filename
+    currentFilename = sourceFilenameForPlayback(
+        stream = stream,
+        fallbackFilename = navigationArgs.filename
+    )
     showStreamSourceIndicator(stream)
     resetPostPlayOverlayState(clearEpisode = false)
     launchTorrentSourceStream(stream, infoHash, loadSavedProgress = true)
@@ -1517,7 +1527,10 @@ private fun PlayerRuntimeController.switchToEpisodeStreamCommon(
     releasePlayer(flushPlaybackState = false)
 
     applyStreamMetadata(stream)
-    currentFilename = stream.behaviorHints?.filename ?: navigationArgs.filename
+    currentFilename = sourceFilenameForPlayback(
+        stream = stream,
+        fallbackFilename = navigationArgs.filename
+    )
 
     persistedTrackPreference = null
     subtitleDisabledByPersistedPreference = false
