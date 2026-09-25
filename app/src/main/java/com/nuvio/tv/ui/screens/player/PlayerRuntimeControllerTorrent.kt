@@ -175,7 +175,10 @@ internal fun PlayerRuntimeController.launchTorrentSourceStream(
             val localUrl = startTorrentStream(
                 infoHash = infoHash,
                 fileIdx = stream.getEffectiveFileIdx(),
-                filename = stream.behaviorHints?.filename,
+                filename = sourceFilenameForPlayback(
+                    stream = stream,
+                    fallbackFilename = navigationArgs.filename
+                ),
                 trackers = trackers
             )
 
