@@ -76,3 +76,12 @@ jobs:
           archive: false
           if-no-files-found: error
           retention-days: 7
+
+      - name: Upload x86_64 fullDebug APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: app-full-x86_64-debug.apk
+          path: app/build/outputs/apk/full/debug/app-full-x86_64-debug.apk
+          archive: false
+          if-no-files-found: error
+          retention-days: 7
