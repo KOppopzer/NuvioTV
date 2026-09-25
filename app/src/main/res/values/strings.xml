@@ -874,6 +874,8 @@
     <string name="sub_strip_sdh_desc">Hide sound descriptions and speaker labels from text subtitles</string>
     <string name="sub_organization">Subtitle Organization</string>
     <string name="sub_size">Size</string>
+    <string name="sub_line_spacing">Line spacing</string>
+    <string name="sub_line_spacing_desc">Space between subtitle lines</string>
     <string name="sub_vertical_offset">Vertical Offset</string>
     <string name="sub_bold">Bold</string>
     <string name="sub_bold_sub">Use bold font weight for subtitles</string>
@@ -1882,6 +1884,7 @@
     <string name="subtitle_style_color">Color</string>
     <string name="subtitle_style_reset">Reset</string>
     <string name="subtitle_style_font_size">Font Size</string>
+    <string name="subtitle_style_line_spacing">Line Spacing</string>
     <string name="subtitle_style_bold">Bold</string>
     <string name="subtitle_style_text_color">Text Color</string>
     <string name="subtitle_style_text_opacity">Text Opacity</string>

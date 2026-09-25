@@ -107,6 +107,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.media3.common.Tracks
+import androidx.media3.common.text.Cue
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import androidx.tv.material3.Border
@@ -1750,6 +1751,7 @@ private fun ExoPlayerSurface(
     val latestAspectMode by rememberUpdatedState(aspectMode)
     val latestBindSubtitleView by rememberUpdatedState(onBindSubtitleView)
     val latestSubtitleStyle by rememberUpdatedState(subtitleStyle)
+    val latestSubtitleCues = remember { mutableStateOf<List<Cue>>(emptyList()) }
     val playerView = remember(context, player) {
         PlayerView(context).apply {
             useController = false
@@ -1801,12 +1803,22 @@ private fun ExoPlayerSurface(
 
     DisposableEffect(player, playerView) {
         val listener = object : androidx.media3.common.Player.Listener {
+            override fun onCues(cueGroup: androidx.media3.common.text.CueGroup) {
+                latestSubtitleCues.value = cueGroup.cues
+                if (!controller.isSidecarAddonSubtitleActive()) {
+                    playerView.subtitleView?.setCues(
+                        cueGroup.cues.withSubtitleLineSpacing(latestSubtitleStyle.lineSpacing)
+                    )
+                }
+            }
+
             override fun onVideoSizeChanged(videoSize: androidx.media3.common.VideoSize) {
                 controller.videoAspectRatio = if (videoSize.width > 0 && videoSize.height > 0) {
                     videoSize.width.toFloat() * videoSize.pixelWidthHeightRatio / videoSize.height.toFloat()
                 } else {
                     0f
                 }
+
                 playerView.post {
                     playerView.applyExoAspectMode(latestAspectMode)
                 }
@@ -1832,6 +1844,18 @@ private fun ExoPlayerSurface(
         }
         onDispose {
             player.removeListener(listener)
+        }
+    }
+
+    LaunchedEffect(playerView, subtitleStyle.lineSpacing) {
+        if (controller.isSidecarAddonSubtitleActive()) {
+            controller.renderSidecarCuesAtCurrentPosition(force = true)
+        } else {
+            playerView.post {
+                playerView.subtitleView?.setCues(
+                    latestSubtitleCues.value.withSubtitleLineSpacing(subtitleStyle.lineSpacing)
+                )
+            }
         }
     }
 

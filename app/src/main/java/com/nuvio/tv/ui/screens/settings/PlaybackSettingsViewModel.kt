@@ -250,6 +250,10 @@ class PlaybackSettingsViewModel @Inject constructor(
         playerSettingsDataStore.setSubtitleSize(size)
     }
 
+    suspend fun setSubtitleLineSpacing(spacing: Int) {
+        playerSettingsDataStore.setSubtitleLineSpacing(spacing)
+    }
+
     suspend fun setSubtitleVerticalOffset(offset: Int) {
         playerSettingsDataStore.setSubtitleVerticalOffset(offset)
     }
