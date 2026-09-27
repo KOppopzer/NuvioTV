@@ -114,6 +114,10 @@ class PlaybackSettingsViewModel @Inject constructor(
         playerSettingsDataStore.setAudioOutputChannels(channels)
     }
 
+    suspend fun setPostDownmixLimiterEnabled(enabled: Boolean) {
+        playerSettingsDataStore.setPostDownmixLimiterEnabled(enabled)
+    }
+
     suspend fun setMaintainOriginalAudioOnDownmix(enabled: Boolean) {
         playerSettingsDataStore.setMaintainOriginalAudioOnDownmix(enabled)
     }

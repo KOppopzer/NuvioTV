@@ -291,8 +291,8 @@ fun PlaybackSettingsContent(
                 onSetDownmixEnabled = { enabled ->
                     coroutineScope.launch { viewModel.setDownmixEnabled(enabled) }
                 },
-                onSetMaintainOriginalAudioOnDownmix = { enabled ->
-                    coroutineScope.launch { viewModel.setMaintainOriginalAudioOnDownmix(enabled) }
+                onSetPostDownmixLimiterEnabled = { enabled ->
+                    coroutineScope.launch { viewModel.setPostDownmixLimiterEnabled(enabled) }
                 },
                 onSetSkipSilence = { enabled -> coroutineScope.launch { viewModel.setSkipSilence(enabled) } },
                 onSetRememberAudioDelayPerDevice = { enabled ->
