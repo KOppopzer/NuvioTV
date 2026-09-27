@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.SeekParameters
 import com.nuvio.tv.R
+import com.nuvio.tv.core.connection.PlaybackThroughput
 import com.nuvio.tv.core.player.LastPlaybackDiagnostics
 import com.nuvio.tv.core.tracking.TRACKING_SCROBBLE_DIAGNOSTIC_TAG
 import com.nuvio.tv.core.tracking.TrackingMediaKind
@@ -261,6 +262,7 @@ internal fun PlayerRuntimeController.startProgressUpdates() {
                         )
                     }
                     updateMpvAvailableTracks()
+                    view.sampleThroughput(context, currentStreamUrl)
                     updateActiveSkipInterval(pos)
                     if (!_playbackTimeline.value.isLive) {
                         evaluatePostPlayOverlayVisibility(
@@ -288,10 +290,12 @@ internal fun PlayerRuntimeController.startProgressUpdates() {
                 publishPlaybackTimeline(
                     currentPosition = displayPosition,
                     duration = playerDuration.coerceAtLeast(0L),
-                    bufferedPosition = player.bufferedPosition.coerceAtLeast(displayPosition),
+                    bufferedPosition = com.nuvio.tv.ui.screens.player.seekbuffer.SeekReadAhead.bufferedPositionMs(player.bufferedPosition, playerDuration).coerceAtLeast(displayPosition), // Nuvio RS hook: read-ahead on the seek bar
                     playerReportsLive = player.isCurrentMediaItemLive,
                     isPlaying = player.isPlaying
                 )
+                // Nuvio RS hook: read-ahead's connection; a live stream only arrives at its own bitrate, so it says nothing about the network.
+                PlaybackThroughput.onExoTick(context, currentStreamUrl, !player.isCurrentMediaItemLive && playerDuration != androidx.media3.common.C.TIME_UNSET && (com.nuvio.tv.ui.screens.player.seekbuffer.SeekReadAhead.isDownloading() ?: player.isLoading))
                 playbackAnalyticsDiagnostics.recordProgressSnapshot(
                     player = player,
                     hasRenderedFirstFrame = hasRenderedFirstFrame,
@@ -1329,6 +1333,7 @@ fun PlayerRuntimeController.onEvent(event: PlayerEvent) {
             pendingAddonSubtitleTrackId = null
             pendingAudioSelectionAfterSubtitleRefresh = null
             resetSubtitleAutoSyncState()
+            stopAutomaticSubtitleSync() // AutoSync hook
             rememberInternalSubtitleSelection(event.index)
             selectSubtitleTrack(event.index)
             _uiState.update {
@@ -1352,6 +1357,7 @@ fun PlayerRuntimeController.onEvent(event: PlayerEvent) {
             pendingAddonSubtitleTrackId = null
             pendingAudioSelectionAfterSubtitleRefresh = null
             resetSubtitleAutoSyncState()
+            stopAutomaticSubtitleSync() // AutoSync hook
             rememberSubtitleDisabled()
             disableSubtitles()
             _uiState.update {
@@ -1374,6 +1380,7 @@ fun PlayerRuntimeController.onEvent(event: PlayerEvent) {
             autoSubtitleSelected = true
             rememberAddonSubtitleSelection(event.subtitle)
             selectAddonSubtitle(event.subtitle)
+            runSelectedAutomaticSubtitleSync(event.subtitle) // AutoSync hook
             _uiState.update {
                 it.copy(
                     showSubtitleOverlay = true,

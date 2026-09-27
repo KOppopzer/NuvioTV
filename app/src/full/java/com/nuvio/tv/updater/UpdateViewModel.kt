@@ -57,7 +57,7 @@ class UpdateViewModel @Inject constructor(
                     updateChannel = channel
                 )
             }
-            if (enabled && !BuildConfig.IS_DEBUG_BUILD) {
+            if (enabled && (!BuildConfig.IS_DEBUG_BUILD || BuildConfig.AUTOSYNC_FORK)) {
                 checkForUpdates(force = false, showNoUpdateFeedback = false)
             }
         }
@@ -85,7 +85,8 @@ class UpdateViewModel @Inject constructor(
 
             result
                 .onSuccess { update ->
-                    val remoteNewer = VersionUtils.isRemoteNewer(update.tag, BuildConfig.VERSION_NAME)
+                    val remoteNewer = VersionUtils.isRemoteNewer(update.tag, BuildConfig.VERSION_NAME) ||
+                        ReshapedBridge.offersReshaped(context, update) // Nuvio RS hook
                     val shouldShow = UpdateBannerPolicy.shouldShow(
                         isRemoteNewer = remoteNewer,
                         force = force,
@@ -185,7 +186,7 @@ class UpdateViewModel @Inject constructor(
         }
         viewModelScope.launch {
             updatePreferences.setUpdateBannerEnabled(enabled)
-            if (enabled && changed && !BuildConfig.IS_DEBUG_BUILD) {
+            if (enabled && changed && (!BuildConfig.IS_DEBUG_BUILD || BuildConfig.AUTOSYNC_FORK)) {
                 checkForUpdates(force = false, showNoUpdateFeedback = false)
             }
         }
@@ -214,7 +215,7 @@ class UpdateViewModel @Inject constructor(
         }
         viewModelScope.launch {
             updatePreferences.setUpdateChannel(channel)
-            if (!BuildConfig.IS_DEBUG_BUILD) {
+            if (!BuildConfig.IS_DEBUG_BUILD || BuildConfig.AUTOSYNC_FORK) {
                 checkForUpdates(force = true, showNoUpdateFeedback = false)
             }
         }

@@ -36,6 +36,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
+import com.nuvio.tv.core.connection.PlaybackThroughput
 import com.nuvio.tv.core.network.IPv4FirstDns
 import com.nuvio.tv.core.torrent.TorrServerBinary
 import com.nuvio.tv.data.local.PlayerSettings
@@ -155,7 +156,9 @@ internal class PlayerMediaSourceFactory(private val context: Context) {
         cacheKey: String? = null
     ): MediaSource {
         val sanitizedHeaders = sanitizeHeaders(headers)
-        val httpDataSourceFactory = PlayerPlaybackNetworking.createDataSourceFactory(context, sanitizedHeaders)
+        val httpDataSourceFactory = PlaybackThroughput.countingNetworkBytes(
+            PlayerPlaybackNetworking.createDataSourceFactory(context, sanitizedHeaders)
+        )
 
         val resolvedMimeType = mimeTypeOverride ?: inferMimeType(
             url = url,
@@ -195,10 +198,11 @@ internal class PlayerMediaSourceFactory(private val context: Context) {
         PlayerMemoryReporter.startSampling(context)
         val useChunkSessionSource = useParallelConnections && !isHls && !isDash
         parallelStartupPrefetchUnlocked.set(!useChunkSessionSource)
-        val progressiveUpstreamFactory: DataSource.Factory = if (useChunkSessionSource) {
+        val networkUpstreamFactory: DataSource.Factory = if (useChunkSessionSource) {
             val okHttpFactory = OkHttpDataSource.Factory(playbackHttpClient).apply {
                 setDefaultRequestProperties(sanitizedHeaders)
                 setUserAgent(DEFAULT_USER_AGENT)
+                setTransferListener(PlaybackThroughput.networkByteCounter)
             }
             val sessionConnections = parallelConnectionCount
             // Runtime enforcement of the tier chunk cap: a value
@@ -226,9 +230,11 @@ internal class PlayerMediaSourceFactory(private val context: Context) {
         } else {
             httpDataSourceFactory
         }
+        val progressiveUpstreamFactory = com.nuvio.tv.ui.screens.player.seekbuffer.SeekReadAhead.wrap(context, url, progressive = !isHls && !isDash, upstream = networkUpstreamFactory) // Nuvio RS hook: disk read-ahead (Seek buffer)
 
         // 2. VOD disk cache (opt-in).
-        val useVodCache = ENABLE_VOD_CACHE && vodCacheEnabled && !isHls && !isDash && shouldUseVodCache(url)
+        val useVodCache = ENABLE_VOD_CACHE && vodCacheEnabled && !isHls && !isDash && shouldUseVodCache(url) &&
+            !com.nuvio.tv.reshaped.livetv.LiveTvPlaybackRegistry.isLiveTv(url) // Nuvio RS hook: Live TV is never cached
         // A playback started inside the delay window would have its own data swept out from under it.
         pendingEvictionJob?.cancel()
         pendingEvictionJob = null

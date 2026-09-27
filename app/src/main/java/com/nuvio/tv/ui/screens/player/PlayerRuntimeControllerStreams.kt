@@ -1,9 +1,11 @@
 package com.nuvio.tv.ui.screens.player
 
+import com.nuvio.tv.ui.reshaped.livetv.keepPlayerForLiveTvZap // Nuvio RS hook
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import androidx.media3.common.util.UnstableApi
+import com.nuvio.tv.core.connection.StreamConnectionFit
 import com.nuvio.tv.core.debrid.DirectDebridPlayableResult
 import com.nuvio.tv.core.network.NetworkResult
 import com.nuvio.tv.core.player.StreamAutoPlaySelector
@@ -220,6 +222,10 @@ internal fun PlayerRuntimeController.loadSourceStreams(forceRefresh: Boolean) {
             updateSourceChipsForFetchStart(type, vid, installedAddons)
         }
 
+        // Nuvio RS: one connection snapshot per load, taken once the duration is known.
+        var connectionFit: StreamConnectionFit? = null
+        var connectionFitCaptured = false
+
         streamRepository.getStreamsFromAllAddons(
             type = type,
             videoId = vid,
@@ -229,7 +235,14 @@ internal fun PlayerRuntimeController.loadSourceStreams(forceRefresh: Boolean) {
         ).collect { result ->
             when (result) {
                 is NetworkResult.Success -> {
-                    val addonStreams = StreamAutoPlaySelector.orderAddonStreams(result.data, installedAddonOrder)
+                    if (!connectionFitCaptured) {
+                        currentPlaybackDurationMs().takeIf { it > 0L }?.let { durationMs ->
+                            connectionFit = StreamConnectionFit.captureByDuration(context, durationMs)
+                            connectionFitCaptured = true
+                        }
+                    }
+                    val addonOrderedStreams = StreamAutoPlaySelector.orderAddonStreams(result.data, installedAddonOrder)
+                    val addonStreams = connectionFit?.applyToGroups(addonOrderedStreams) ?: addonOrderedStreams
                     val allStreams = addonStreams.flatMap { it.streams }
                     val availableAddons = addonStreams.map { it.addonName }
                     _uiState.update {
@@ -838,7 +851,7 @@ internal fun PlayerRuntimeController.switchToSourceStream(
     )
 
     resetLoadingOverlayForNewStream()
-    releasePlayer(flushPlaybackState = false)
+    if (!keepPlayerForLiveTvZap(url)) releasePlayer(flushPlaybackState = false) // Nuvio RS hook: Live TV zaps keep the player
 
     applySelectedStreamState(
         stream = stream,

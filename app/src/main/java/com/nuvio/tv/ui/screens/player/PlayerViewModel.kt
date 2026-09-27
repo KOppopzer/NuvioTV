@@ -40,6 +40,7 @@ import com.nuvio.tv.data.repository.TraktRelatedService
 import com.nuvio.tv.data.trailer.TrailerService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import com.nuvio.tv.ui.screens.player.seekpreview.SeekPreviewState
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -83,6 +84,8 @@ class PlayerViewModel @Inject constructor(
     private val traktRelatedService: TraktRelatedService,
     private val traktAuthDataStore: TraktAuthDataStore,
     private val traktSettingsDataStore: TraktSettingsDataStore,
+    private val simklRelatedService: com.nuvio.tv.data.simkl.SimklRelatedService,
+    private val simklAuthRepository: com.nuvio.tv.data.simkl.SimklAuthRepository,
     private val directDebridResolver: DirectDebridResolver,
     private val directDebridStreamPreparer: DirectDebridStreamPreparer,
     private val cloudLibraryRepository: CloudLibraryRepository,
@@ -155,6 +158,8 @@ class PlayerViewModel @Inject constructor(
         traktRelatedService = traktRelatedService,
         traktAuthDataStore = traktAuthDataStore,
         traktSettingsDataStore = traktSettingsDataStore,
+        simklRelatedService = simklRelatedService,
+        simklAuthRepository = simklAuthRepository,
         layoutPreferenceDataStore = layoutPreferenceDataStore,
         watchProgressRepository = watchProgressRepository,
         watchedSeriesStateHolder = watchedSeriesStateHolder,
@@ -163,6 +168,9 @@ class PlayerViewModel @Inject constructor(
         trailerPlayerPool = trailerPlayerPool,
         scope = viewModelScope
     )
+
+    /** Seek-preview thumbnails (Seekr); see the seekpreview package. */
+    val seekPreview = SeekPreviewState(viewModelScope, controller)
 
     val uiState: StateFlow<PlayerUiState>
         get() = controller.uiState
@@ -250,7 +258,7 @@ class PlayerViewModel @Inject constructor(
     }
 
     fun onEvent(event: PlayerEvent) {
-        controller.onEvent(event)
+        controller.onEvent(seekPreview.intercept(event))
     }
 
     fun bindExoSubtitleView(subtitleView: androidx.media3.ui.SubtitleView?) {

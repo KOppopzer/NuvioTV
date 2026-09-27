@@ -178,6 +178,19 @@ class NuvioMpvSurfaceView @JvmOverloads constructor(
         return mpv.getPropertyDouble("demuxer-cache-duration") ?: 0.0
     }
 
+    /** Feeds mpv's download rate to connection-speed learning (core/connection). */
+    fun sampleThroughput(context: Context, streamUrl: String?) {
+        if (!initialized) return
+        com.nuvio.tv.core.connection.PlaybackThroughput.onMpvTick(
+            context = context,
+            streamUrl = streamUrl,
+            bytesPerSecond = mpv.getPropertyDouble("cache-speed")?.toLong() ?: 0L,
+            // A live stream (no duration) only arrives at its own bitrate: it says nothing about the network.
+            isFetching = mpv.getPropertyBoolean("demuxer-cache-idle") == false &&
+                (mpv.getPropertyDouble("duration") ?: 0.0) > 0.0
+        )
+    }
+
     fun isCoreIdleNow(): Boolean {
         if (!initialized) return false
         return mpv.getPropertyBoolean("core-idle") == true
@@ -244,7 +257,8 @@ class NuvioMpvSurfaceView @JvmOverloads constructor(
     fun applyAudioAmplificationDb(db: Int) {
         if (!initialized) return
         val clampedDb = db.coerceIn(AUDIO_AMPLIFICATION_MIN_DB, AUDIO_AMPLIFICATION_MAX_DB)
-        val linearScale = 10.0.pow(clampedDb / 20.0)
+        // Nuvio RS: mpv volume is cubic (gain = (volume/100)^3), so +N dB is 10^(N/60), not 10^(N/20).
+        val linearScale = 10.0.pow(clampedDb / 60.0)
         val targetVolumePercent = (100.0 * linearScale).coerceIn(0.0, MPV_MAX_VOLUME_PERCENT)
         runCatching {
             mpv.setPropertyDouble("volume", targetVolumePercent)
@@ -648,6 +662,8 @@ class NuvioMpvSurfaceView @JvmOverloads constructor(
         mpv.setOptionString("sub-ass-override", "no")
         mpv.setOptionString("sub-codepage", "auto:utf-8")
         mpv.setOptionString("sub-font", "Roboto")
+        // Nuvio RS hook: custom subtitle font (replaces Roboto when one is imported)
+        com.nuvio.tv.reshaped.subtitlefont.SubtitleFontStore.mpvOptions(context).forEach { (name, value) -> mpv.setOptionString(name, value) }
         mpv.setOptionString("sub-use-margins", "yes")
         mpv.setOptionString("sub-ass-force-margins", "yes")
         mpv.setOptionString(
@@ -661,8 +677,9 @@ class NuvioMpvSurfaceView @JvmOverloads constructor(
         mpv.setOptionString("tls-verify", "yes")
         mpv.setOptionString("tls-ca-file", "${context.filesDir.path}/cacert.pem")
         mpv.setOptionString("input-default-bindings", "yes")
-        mpv.setOptionString("demuxer-max-bytes", "${64 * 1024 * 1024}")
-        mpv.setOptionString("demuxer-max-back-bytes", "${64 * 1024 * 1024}")
+        val (mpvAheadBytes, mpvBackBytes) = com.nuvio.tv.ui.screens.player.seekbuffer.SeekBufferSettings.mpvCacheBytes(context) // Nuvio RS hook: Seek buffer setting
+        mpv.setOptionString("demuxer-max-bytes", "$mpvAheadBytes")
+        mpv.setOptionString("demuxer-max-back-bytes", "$mpvBackBytes")
         mpv.setOptionString("keep-open", "yes")
         mpv.setOptionString("softvol", "yes")
         mpv.setOptionString("volume-max", MPV_MAX_VOLUME_PERCENT.toInt().toString())
