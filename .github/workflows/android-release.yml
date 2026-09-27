@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: Build APK artifacts only, preview metadata, create a draft, or publish the release
+        description: Build APKs with a temporary key only, preview metadata, create a draft, or publish
         required: true
         type: choice
         options:
@@ -89,7 +89,7 @@ jobs:
             fi
           fi
 
-          if [[ "${RELEASE_MODE}" != "dry-run" ]]; then
+          if [[ "${RELEASE_MODE}" == "draft" || "${RELEASE_MODE}" == "publish" ]]; then
             required_secrets=(
               LOCAL_PROPERTIES_BASE64
               RELEASE_KEYSTORE_BASE64
@@ -169,10 +169,23 @@ jobs:
         if: inputs.mode != 'dry-run'
         run: |
           keystore_path="${RUNNER_TEMP}/nuviotv-release.jks"
-          printf '%s' "${RELEASE_KEYSTORE_BASE64}" | base64 --decode > "${keystore_path}"
-          printf '%s' "${LOCAL_PROPERTIES_BASE64}" | base64 --decode > local.properties
+          if [[ "${{ inputs.mode }}" == "build-only" ]]; then
+            keytool -genkeypair \
+              -keystore "${keystore_path}" \
+              -storepass android \
+              -alias ci-release \
+              -keypass android \
+              -dname "CN=NuvioTV CI Build,O=Unofficial,C=US" \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000
+            touch local.properties
+          else
+            printf '%s' "${RELEASE_KEYSTORE_BASE64}" | base64 --decode > "${keystore_path}"
+            printf '%s' "${LOCAL_PROPERTIES_BASE64}" | base64 --decode > local.properties
+          fi
 
-          if [[ -n "${LOCAL_DEV_PROPERTIES_BASE64}" ]]; then
+          if [[ -n "${LOCAL_DEV_PROPERTIES_BASE64}" && "${{ inputs.mode }}" != "build-only" ]]; then
             printf '%s' "${LOCAL_DEV_PROPERTIES_BASE64}" | base64 --decode > local.dev.properties
           fi
 
@@ -186,23 +199,31 @@ jobs:
 
           sed -i -E '/^[[:space:]]*(sdk\.dir|NUVIO_RELEASE_STORE_FILE)[[:space:]]*=/d' local.properties
           set_property NUVIO_RELEASE_STORE_FILE "${keystore_path}"
-          set_property NUVIO_RELEASE_KEY_ALIAS "${RELEASE_KEY_ALIAS}"
-          set_property NUVIO_RELEASE_KEY_PASSWORD "${RELEASE_KEY_PASSWORD}"
-          set_property NUVIO_RELEASE_STORE_PASSWORD "${RELEASE_STORE_PASSWORD}"
+          if [[ "${{ inputs.mode }}" == "build-only" ]]; then
+            set_property NUVIO_RELEASE_KEY_ALIAS "ci-release"
+            set_property NUVIO_RELEASE_KEY_PASSWORD "android"
+            set_property NUVIO_RELEASE_STORE_PASSWORD "android"
+          else
+            set_property NUVIO_RELEASE_KEY_ALIAS "${RELEASE_KEY_ALIAS}"
+            set_property NUVIO_RELEASE_KEY_PASSWORD "${RELEASE_KEY_PASSWORD}"
+            set_property NUVIO_RELEASE_STORE_PASSWORD "${RELEASE_STORE_PASSWORD}"
+          fi
 
-          required_properties=(
-            NUVIO_RELEASE_STORE_PASSWORD
-            NUVIO_RELEASE_KEY_ALIAS
-            NUVIO_RELEASE_KEY_PASSWORD
-            TRAKT_CLIENT_ID
-            TRAKT_CLIENT_SECRET
-          )
-          for property_name in "${required_properties[@]}"; do
-            if ! grep -Eq "^[[:space:]]*${property_name}[[:space:]]*=[[:space:]]*.+$" local.properties; then
-              echo "Missing required property: ${property_name}" >&2
-              exit 1
-            fi
-          done
+          if [[ "${{ inputs.mode }}" != "build-only" ]]; then
+            required_properties=(
+              NUVIO_RELEASE_STORE_PASSWORD
+              NUVIO_RELEASE_KEY_ALIAS
+              NUVIO_RELEASE_KEY_PASSWORD
+              TRAKT_CLIENT_ID
+              TRAKT_CLIENT_SECRET
+            )
+            for property_name in "${required_properties[@]}"; do
+              if ! grep -Eq "^[[:space:]]*${property_name}[[:space:]]*=[[:space:]]*.+$" local.properties; then
+                echo "Missing required property: ${property_name}" >&2
+                exit 1
+              fi
+            done
+          fi
 
       - name: Test updater and build full release APKs
         if: inputs.mode != 'dry-run'
@@ -212,7 +233,7 @@ jobs:
         if: inputs.mode != 'dry-run'
         uses: actions/upload-artifact@v6
         with:
-          name: nuviotv-${{ steps.release.outputs.version }}-full-release
+          name: nuviotv-${{ steps.release.outputs.version }}-full-release${{ inputs.mode == 'build-only' && '-temporary-key' || '' }}
           path: app/build/outputs/apk/full/release/*.apk
           if-no-files-found: error
 
