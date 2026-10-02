@@ -79,6 +79,6 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           path: ${{ inputs.arm64_only == true && 'app/build/outputs/apk/full/debug/app-full-arm64-v8a-debug.apk' || 'app/build/outputs/apk/full/debug/app-full-universal-debug.apk' }}
-          archive: false
+          archive: true
           if-no-files-found: error
           retention-days: 7
