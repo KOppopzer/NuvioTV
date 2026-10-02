@@ -5,6 +5,12 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
     branches: [dev]
   workflow_dispatch:
+    inputs:
+      arm64_only:
+        description: Build and upload only the arm64-v8a APK (no universal APK)
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -67,12 +73,12 @@ jobs:
           } >> "$GITHUB_ENV"
 
       - name: Test updater and build fullDebug APK
-        run: ./gradlew :app:testFullDebugUnitTest --tests 'com.nuvio.tv.updater.*' :app:assembleFullDebug --stacktrace
+        run: ./gradlew :app:testFullDebugUnitTest --tests 'com.nuvio.tv.updater.*' :app:assembleFullDebug -Parm64OnlyApk=${{ inputs.arm64_only == true }} --stacktrace
 
       - name: Upload fullDebug APK
         uses: actions/upload-artifact@v7
         with:
-          path: app/build/outputs/apk/full/debug/app-full-universal-debug.apk
+          path: ${{ inputs.arm64_only == true && 'app/build/outputs/apk/full/debug/app-full-arm64-v8a-debug.apk' || 'app/build/outputs/apk/full/debug/app-full-universal-debug.apk' }}
           archive: false
           if-no-files-found: error
           retention-days: 7
