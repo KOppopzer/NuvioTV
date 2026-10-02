@@ -104,6 +104,16 @@ internal fun PlaybackSubtitlesSection(
         enabled = enabled
     )
     SliderSettingsItem(
+        title = stringResource(R.string.sub_vertical_offset),
+        value = style.verticalOffset,
+        valueText = "${style.verticalOffset}%",
+        minValue = -20,
+        maxValue = 50,
+        step = 1,
+        onValueChange = { offset -> onUpdate { setSubtitleVerticalOffset(offset) } },
+        enabled = enabled
+    )
+    SliderSettingsItem(
         title = stringResource(R.string.sub_line_spacing),
         subtitle = stringResource(R.string.sub_line_spacing_desc),
         value = style.lineSpacing,
@@ -112,16 +122,6 @@ internal fun PlaybackSubtitlesSection(
         maxValue = 200,
         step = 10,
         onValueChange = { spacing -> onUpdate { setSubtitleLineSpacing(spacing) } },
-        enabled = enabled
-    )
-    SliderSettingsItem(
-        title = stringResource(R.string.sub_vertical_offset),
-        value = style.verticalOffset,
-        valueText = "${style.verticalOffset}%",
-        minValue = -20,
-        maxValue = 50,
-        step = 1,
-        onValueChange = { offset -> onUpdate { setSubtitleVerticalOffset(offset) } },
         enabled = enabled
     )
     SettingsToggleRow(
